@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Planning & NRM Platform</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure@3.2.0/dist/leaflet-measure.css" />
+
+    <style>
+        /* Main layout */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        /* Blue header ribbon */
+        .header {
+            width: 100%;
+            background-color: #007BFF;
+            color: rgb(6, 240, 38);
+            text-align: center;
+            padding: 10px 0;
+            font-size: 30px;
+        }
+
+        /* Layout: sidebar and main content */
+        .container {
+            display: flex;
+            height: calc(100% - 10px); /* Adjust height minus the header */
+        }
+
+        /* Vertical navigation bar */
+        .sidebar {
+            width: 25%;
+            background-color: #8283d6;
+            padding: 15px;
+            box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            color: black;
+            font-family: 'Times New Roman';
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 5px;
+        }
+
+        .sidebar ul li {
+            padding: 15px;
+            background-color: #007BFF;
+            margin-bottom: 10px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .sidebar ul li:hover {
+            background-color: #00b3aa;
+        }
+
+        /* Map container */
+        #map {
+            width: 75%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Blue header -->
+    <div class="header">
+        KENYA SPACE AGENCY DATA PORTAL
+    </div>
+
+    <div class="container">
+        <!-- Sidebar navigation for Urban Planning and NRM -->
+        <div class="sidebar">
+            <h2>DATA AND SERVICES</h2>
+            <ul>
+                <li id="urban-planning-tab">Urban Planning</li>
+                <li id="nrm-tab">Natural Resource Management</li>
+                <li id="Disaster">Disaster and Risk</li>
+                <li id="climate and Weather">Climate and Weather</li>
+                <li id="Agriculture" a href="www.ksa.go.ke">Agriculture</li>
+            </ul>
+        </div>
+
+        <!-- Map display area -->
+        <div id="map"></div>
+    </div>
+
+    <!-- Include Leaflet.js and plugins -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-measure@3.2.0/dist/leaflet-measure.js"></script>
+
+    <!-- JavaScript for Leaflet map, digitizing, and measurement tools -->
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([0.3476, 37.5826], 6);  // Set initial center and zoom level
+
+        // Define OpenStreetMap and Google Satellite layers
+        var googleSatelliteLayer = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Earth'
+        });
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+
+        // Add OpenStreetMap as the default base layer
+        osmLayer.addTo(map);
+
+        // Layer control to switch between OpenStreetMap and Google Satellite
+        var baseMaps = {
+            "OpenStreetMap": osmLayer,
+            "Google Earth Satellite": googleSatelliteLayer
+        };
+        L.control.layers(baseMaps).addTo(map);
+
+        // Measurement tool
+        L.control.measure({
+            position: 'topright',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares',
+        }).addTo(map);
+
+        // Add digitizing tools
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            position: 'topright',
+            draw: {
+                polygon: true,
+                polyline: true,
+                rectangle: true,
+                circle: false,  // Disable circle drawing
+                marker: true,
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        map.addControl(drawControl);
+
+        // Handle creation of new shapes
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var type = e.layerType;
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+        });
+
+        // Add WMS layer for Human Settlement
+        var humanSettlement = L.tileLayer.wms('http://localhost:8080/geoserver/ne/wms', {
+            layers: 'ne:countries',  // Replace with your layer name
+            format: 'image/png',
+            transparent: true,
+            attribution: "Countries"
+        }).addTo(map);
+    </script>
+</body>
+</html>
